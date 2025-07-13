@@ -71,9 +71,9 @@ const PreviousYearPapers = () => {
   const filteredPapers = papers.filter(paper => {
     return (
       paper.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      (selectedSubject === "" || paper.subject === selectedSubject) &&
-      (selectedYear === "" || paper.year === selectedYear) &&
-      (selectedGrade === "" || paper.grade === selectedGrade)
+      (selectedSubject === "" || selectedSubject === "all" || paper.subject === selectedSubject) &&
+      (selectedYear === "" || selectedYear === "all" || paper.year === selectedYear) &&
+      (selectedGrade === "" || selectedGrade === "all" || paper.grade === selectedGrade)
     );
   });
 
@@ -124,7 +124,7 @@ const PreviousYearPapers = () => {
                   <SelectValue placeholder="Subject" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Subjects</SelectItem>
+                  <SelectItem value="all">All Subjects</SelectItem>
                   <SelectItem value="Biology">Biology</SelectItem>
                   <SelectItem value="Chemistry">Chemistry</SelectItem>
                   <SelectItem value="Physics">Physics</SelectItem>
@@ -136,7 +136,7 @@ const PreviousYearPapers = () => {
                   <SelectValue placeholder="Year" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Years</SelectItem>
+                  <SelectItem value="all">All Years</SelectItem>
                   <SelectItem value="2024">2024</SelectItem>
                   <SelectItem value="2023">2023</SelectItem>
                   <SelectItem value="2022">2022</SelectItem>
@@ -148,7 +148,7 @@ const PreviousYearPapers = () => {
                   <SelectValue placeholder="Grade" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Grades</SelectItem>
+                  <SelectItem value="all">All Grades</SelectItem>
                   <SelectItem value="Grade 9">Grade 9</SelectItem>
                   <SelectItem value="Grade 10">Grade 10</SelectItem>
                   <SelectItem value="Grade 11">Grade 11</SelectItem>
