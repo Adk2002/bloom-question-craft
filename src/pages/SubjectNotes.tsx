@@ -62,8 +62,8 @@ const SubjectNotes = () => {
   const filteredNotes = notes.filter(note => {
     return (
       note.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      (selectedSubject === "" || note.subject === selectedSubject) &&
-      (selectedGrade === "" || note.grade === selectedGrade)
+      (selectedSubject === "" || selectedSubject === "all" || note.subject === selectedSubject) &&
+      (selectedGrade === "" || selectedGrade === "all" || note.grade === selectedGrade)
     );
   });
 
@@ -114,7 +114,7 @@ const SubjectNotes = () => {
                   <SelectValue placeholder="Filter by Subject" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Subjects</SelectItem>
+                  <SelectItem value="all">All Subjects</SelectItem>
                   <SelectItem value="Biology">Biology</SelectItem>
                   <SelectItem value="Chemistry">Chemistry</SelectItem>
                   <SelectItem value="Physics">Physics</SelectItem>
@@ -126,7 +126,7 @@ const SubjectNotes = () => {
                   <SelectValue placeholder="Filter by Grade" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Grades</SelectItem>
+                  <SelectItem value="all">All Grades</SelectItem>
                   <SelectItem value="Grade 9">Grade 9</SelectItem>
                   <SelectItem value="Grade 10">Grade 10</SelectItem>
                   <SelectItem value="Grade 11">Grade 11</SelectItem>
