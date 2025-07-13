@@ -1,13 +1,10 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { User, BookOpen, FileText, Plus, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
-
 const Dashboard = () => {
-  return (
-    <div className="min-h-screen bg-gray-50">
+  return <div className="min-h-screen bg-gray-50">
       <Navbar />
       
       <div className="max-w-7xl mx-auto p-6">
@@ -85,7 +82,7 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <Link to="/profile">
-                <Button className="w-full bg-brand-primary hover:bg-purple-700">
+                <Button className="w-full bg-brand-primary hover:bg-purple-700 my-[2px]">
                   Manage Profile
                 </Button>
               </Link>
@@ -106,14 +103,11 @@ const Dashboard = () => {
             <CardContent>
               <div className="space-y-2">
                 <Link to="/subject-notes">
-                  <Button className="w-full bg-brand-secondary hover:bg-blue-600">
+                  <Button className="w-full bg-brand-secondary hover:bg-blue-600 my-[8px]">
                     Manage Notes
                   </Button>
                 </Link>
-                <Button variant="outline" className="w-full border-brand-secondary text-brand-secondary">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Upload New Note
-                </Button>
+                
               </div>
             </CardContent>
           </Card>
@@ -132,21 +126,16 @@ const Dashboard = () => {
             <CardContent>
               <div className="space-y-2">
                 <Link to="/previous-papers">
-                  <Button className="w-full bg-green-600 hover:bg-green-700">
+                  <Button className="w-full bg-green-600 hover:bg-green-700 my-[6px]">
                     Manage Papers
                   </Button>
                 </Link>
-                <Button variant="outline" className="w-full border-green-600 text-green-600">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Upload New Paper
-                </Button>
+                
               </div>
             </CardContent>
           </Card>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Dashboard;
