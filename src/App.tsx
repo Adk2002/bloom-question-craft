@@ -12,6 +12,7 @@ import PreviousYearPapers from "./pages/PreviousYearPapers";
 import NotFound from "./pages/NotFound";
 import AuthPages from "./pages/(auth)/auth-page";
 import { AuthProvider } from "./pages/(auth)/context/AuthContext";
+import ProtectedRoute from "./pages/(auth)/protectedRoutes/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -25,11 +26,46 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<AuthPages />} />
-            <Route path="/chat" element={<Chat />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/subject-notes" element={<SubjectNotes />} />
-            <Route path="/previous-papers" element={<PreviousYearPapers />} />
+            <Route
+              path="/chat"
+              element={
+                <ProtectedRoute>
+                  <Chat />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/subject-notes"
+              element={
+                <ProtectedRoute>
+                  <SubjectNotes />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/previous-papers"
+              element={
+                <ProtectedRoute>
+                  <PreviousYearPapers />
+                </ProtectedRoute>
+              }
+            />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
