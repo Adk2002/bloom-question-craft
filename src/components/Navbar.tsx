@@ -1,17 +1,42 @@
-
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Share2, User, BookOpen, FileText, MessageSquare, Home, Menu, X } from "lucide-react";
+import { useContext } from "react";
+import { AuthContext } from "@/pages/(auth)/context/AuthContext";
+
+import {
+  Share2,
+  User,
+  BookOpen,
+  FileText,
+  MessageSquare,
+  Home,
+  Menu,
+  X,
+  Smile,
+} from "lucide-react";
 import { useState } from "react";
 
 const Navbar = () => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  const auth = useContext(AuthContext);
+
+  if (!auth) {
+    // Optionally render nothing or a fallback
+    return null;
+  }
+
+  const { isAuthenticated, logout } = auth;
+
   const navItems = [
     { path: "/", label: "Home", icon: Home },
-    { path: "/chat", label: "Generate Questions", icon: MessageSquare },
-    { path: "/dashboard", label: "Dashboard", icon: User },
+    ...(isAuthenticated
+      ? [
+          { path: "/chat", label: "Generate Questions", icon: MessageSquare },
+          { path: "/dashboard", label: "Dashboard", icon: User },
+        ]
+      : []),
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -20,12 +45,14 @@ const Navbar = () => {
     <nav className="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Logo */}
+          {/* This is the Logo part */}
           <Link to="/" className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-brand-primary rounded-lg flex items-center justify-center">
               <BookOpen className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-bold text-brand-primary">QuestionCraft</span>
+            <span className="text-xl font-bold text-brand-primary">
+              QuestionCraft
+            </span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -49,13 +76,39 @@ const Navbar = () => {
             })}
           </div>
 
+          {/* Login button (always visible, green) */}
+          <div className="hidden md:flex items-center space-x-4">
+            {isAuthenticated ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-red-600 text-red-600 hover:bg-red-600 hover:text-white"
+                onClick={logout}
+              >
+                <Smile className="w-6 h-6 mr-1" />
+                Logout
+              </Button>
+            ) : (
+              <Link to="/auth">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-green-600 text-green-600 hover:bg-green-600 hover:text-white"
+                >
+                  <Smile className="w-6 h-6 mr-1" />
+                  Login
+                </Button>
+              </Link>
+            )}
+          </div>
+
           {/* Share Button */}
           <div className="hidden md:flex items-center space-x-4">
             {location.pathname === "/chat" && (
               <Button
                 variant="outline"
                 size="sm"
-                className="border-brand-secondary text-brand-secondary hover:bg-brand-secondary hover:text-white"
+                className="border-brand-secondary text-brand-secondary hover:bg-purple-600 hover:text-white"
               >
                 <Share2 className="w-4 h-4 mr-2" />
                 Share Chat
@@ -105,7 +158,7 @@ const Navbar = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="border-brand-secondary text-brand-secondary hover:bg-brand-secondary hover:text-white w-fit mx-3 mt-2"
+                  className="border-brand-secondary text-brand-secondary hover:bg-purple-600 hover:text-white w-fit mx-3 mt-2"
                 >
                   <Share2 className="w-4 h-4 mr-2" />
                   Share Chat
