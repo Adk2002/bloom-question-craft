@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Chat from "./pages/Chat";
 import Dashboard from "./pages/Dashboard";
-import Profile from "./pages/Profile";
+import Profile from "./components/Profile";
 import SubjectNotes from "./pages/SubjectNotes";
 import PreviousYearPapers from "./pages/PreviousYearPapers";
 import NotFound from "./pages/NotFound";
