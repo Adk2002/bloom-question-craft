@@ -18,6 +18,24 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+
+// Serve uploaded files statically
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
+// Define routes
+app.use('/api/auth', authRoutes);
+app.use('/api/profile', profileRoutes);
+
+// Fix: Consolidate PYQ routes under one base path
+app.use('/api/pyq', pyqRoutes); // All PYQ routes will be under /api/pyq
+
+// Increase payload limit for file uploads
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+
+
 //Adding error handling middleware
 // Add this before routes
 app.use((err, req, res, next) => {
@@ -35,22 +53,6 @@ app.use((err, req, res, next) => {
     error: process.env.NODE_ENV === 'development' ? err.message : undefined
   });
 });
-
-// Serve uploaded files statically
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
-
-// Define routes
-app.use('/api/auth', authRoutes);
-app.use('/api/profile', profileRoutes);
-
-// Fix: Consolidate PYQ routes under one base path
-app.use('/api/pyq', pyqRoutes); // All PYQ routes will be under /api/pyq
-
-// Increase payload limit for file uploads
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-
-
 app.listen(process.env.PORT, () => {
   console.log(`Server running on port ${process.env.PORT}`);
 });

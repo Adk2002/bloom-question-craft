@@ -236,23 +236,38 @@ const PreviousYearPapers = () => {
 
   const handleDelete = async (id: string) => {
     try {
+      const token = localStorage.getItem('auth_token'); // Make sure to use the same key as login
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
       const response = await fetch(`/api/pyq/${id}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${getAuthToken()}`
-        }
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
       });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Unauthorized - Please log in again');
+        }
+        throw new Error(`Error: ${response.status}`);
+      }
 
       const result = await response.json();
       
       if (result.success) {
         setPapers(papers.filter(paper => paper.id !== id));
       } else {
-        alert('Failed to delete paper: ' + result.message);
+        throw new Error(result.message || 'Failed to delete paper');
       }
     } catch (error) {
       console.error('Delete error:', error);
-      alert('Error deleting paper');
+      // Show error to user
+      alert(error instanceof Error ? error.message : 'Error deleting paper');
     }
   };
 

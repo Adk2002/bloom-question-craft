@@ -2,7 +2,7 @@ import db from '../(database)/db.js'
 import { v4 as uuidv4 } from 'uuid';
 
 export class PYQService {
-  
+
   // Create new PYQ record in database
   async createPYQRecord(pyqData) {
     const {
@@ -127,4 +127,24 @@ export class PYQService {
       throw error;
     }
   }
+
+  //Adding delete PYQ method
+  async deletePYQ(pyqId, userId) {
+    const query = `
+    DELETE FROM "PreviousYearQuestion" 
+    WHERE id = $1 AND "userId" = $2 
+    RETURNING *`;
+
+    try {
+      const result = await db.query(query, [pyqId, userId]);
+      if (result.rows.length === 0) {
+        throw new Error('PYQ not found or unauthorized');
+      }
+      return result.rows[0];
+    } catch (error) {
+      console.error('❌ Error deleting PYQ:', error);
+      throw error;
+    }
+  }
 }
+

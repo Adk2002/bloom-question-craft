@@ -1,6 +1,8 @@
 import { PYQService } from '../services/pyqService.js';
 import { addPYQProcessingJob } from '../queues/pyqQueue.js';
+import db from '../(database)/db.js';
 import path from 'path';
+import { promises as fs } from 'fs';
 
 const pyqService = new PYQService();
 
@@ -103,7 +105,7 @@ export class PYQController {
 
         } catch (fileError) {
           console.error(`❌ Error processing file ${file.originalname}:`, fileError);
-          
+
           // Continue with other files even if one fails
           uploadedPYQs.push({
             fileName: file.originalname,
@@ -202,7 +204,7 @@ export class PYQController {
 
       // Get PYQ details first
       const pyq = await pyqService.getPYQById(pyqId, userId);
-      
+
       if (!pyq) {
         return res.status(404).json({
           success: false,
@@ -210,9 +212,18 @@ export class PYQController {
         });
       }
 
-      // Delete file from filesystem
-      const filePath = path.join(process.cwd(), pyq.fileUrl);
+      // Fix the file path construction
+      // Remove the leading slash from fileUrl
+      const cleanFileUrl = pyq.fileUrl.replace(/^\/+/, '');
+      const filePath = path.join(process.cwd(), cleanFileUrl);
+
+      // Log the paths for debugging
+      console.log('Original fileUrl:', pyq.fileUrl);
+      console.log('Clean fileUrl:', cleanFileUrl);
+      console.log('Final filePath:', filePath);
+
       try {
+        await fs.access(filePath); // Check if file exists
         await fs.unlink(filePath);
         console.log(`🗑️ Deleted file: ${filePath}`);
       } catch (fileError) {
