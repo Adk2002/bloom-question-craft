@@ -7,12 +7,10 @@ import {
   Share2,
   User,
   BookOpen,
-  FileText,
   MessageSquare,
   Home,
   Menu,
   X,
-  Smile,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -85,7 +83,7 @@ const Navbar = () => {
                 className="border-red-600 text-red-600 hover:bg-red-600 hover:text-white"
                 onClick={logout}
               >
-                <Smile className="w-6 h-6 mr-1" />
+                😒
                 Logout
               </Button>
             ) : (
@@ -95,7 +93,7 @@ const Navbar = () => {
                   size="sm"
                   className="border-green-600 text-green-600 hover:bg-green-600 hover:text-white"
                 >
-                  <Smile className="w-6 h-6 mr-1" />
+                  😁
                   Login
                 </Button>
               </Link>

@@ -7,19 +7,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  User,
-  BookOpen,
-  FileText,
-  Settings,
-
-} from "lucide-react";
+import { User, BookOpen, FileText, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 
 import Profile from "@/components/Profile";
 const Dashboard = () => {
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -38,27 +31,31 @@ const Dashboard = () => {
         {/* Quick Stats */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-2xl font-bold text-brand-primary">12</p>
-                  <p className="text-sm text-gray-600">Subject Notes</p>
+            <Link to="/subject-notes">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-2xl font-bold text-brand-primary">12</p>
+                    <p className="text-sm text-gray-600">Subject Notes</p>
+                  </div>
+                  <BookOpen className="w-8 h-8 text-brand-accent" />
                 </div>
-                <BookOpen className="w-8 h-8 text-brand-accent" />
-              </div>
-            </CardContent>
+              </CardContent>
+            </Link>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-2xl font-bold text-brand-secondary">8</p>
-                  <p className="text-sm text-gray-600">Previous Papers</p>
+            <Link to="/previous-papers">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-2xl font-bold text-brand-secondary">8</p>
+                    <p className="text-sm text-gray-600">Previous Papers</p>
+                  </div>
+                  <FileText className="w-8 h-8 text-brand-accent" />
                 </div>
-                <FileText className="w-8 h-8 text-brand-accent" />
-              </div>
-            </CardContent>
+              </CardContent>
+            </Link>
           </Card>
 
           <Card>
