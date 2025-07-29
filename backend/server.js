@@ -11,9 +11,9 @@ dotenv.config();
 
 const app = express();
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:5173', // Add fallback
+  origin: process.env.CORS_ORIGIN || 'http://localhost:8081', // Add fallback
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Explicitly specify methods
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'], // Explicitly specify methods
   allowedHeaders: ['Content-Type', 'Authorization'] // Explicitly specify allowed headers
 }));
 
@@ -53,6 +53,8 @@ app.use((err, req, res, next) => {
     error: process.env.NODE_ENV === 'development' ? err.message : undefined
   });
 });
+
+// Start the server
 app.listen(process.env.PORT, () => {
   console.log(`Server running on port ${process.env.PORT}`);
 });

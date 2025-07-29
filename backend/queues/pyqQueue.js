@@ -1,10 +1,12 @@
 // queues/pyqQueue.js
 import { Queue } from 'bullmq';
+import dotenv from 'dotenv';
 
+dotenv.config();
 const redisConfig = {
-  host: process.env.REDIS_HOST || 'localhost',
-  port: process.env.REDIS_PORT || 6379,
-  password: process.env.REDIS_PASSWORD || undefined,
+  host: process.env.REDIS_HOST,
+  port: process.env.REDIS_PORT,
+  // password: process.env.REDIS_PASSWORD || undefined,
 };
 
 // Create PYQ processing queue
