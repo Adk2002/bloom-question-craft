@@ -75,4 +75,7 @@ The system then:
 - Backend:-
     1. cd backend 
     2. nodemon server.js
+- Worker:- 
+    1. cd backend
+    2. node workers/startWorker.js
 - Database:- Start the database server.
