@@ -1,9 +1,10 @@
 // workers/pyqWorker.js
 import { Worker } from 'bullmq';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from "@google/genai";
 import { QdrantClient } from '@qdrant/js-client-rest';
 import fs from 'fs/promises';
+
 import path from 'path';
 
 // Configuration
@@ -18,8 +19,10 @@ const qdrantConfig = {
   apiKey: process.env.QDRANT_API_KEY || undefined,
 };
 
-// Initialize Gemini AI
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// Initialize Gemini AI with new syntax
+const ai = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY
+});
 
 // Initialize Qdrant client
 const qdrantClient = new QdrantClient({
@@ -35,11 +38,12 @@ const COLLECTION_NAME = 'pyq_embeddings';
  */
 async function loadPdfParser() {
   try {
-    // Use dynamic import to avoid initialization issues
-    const pdfParse = await import('pdf-parse/lib/pdf-parse.js');
-    return pdfParse.default;
+    // Import the package correctly
+    const pdfParse = (await import('pdf-parse')).default;
+    return pdfParse;
   } catch (error) {
-    console.warn('⚠️ pdf-parse failed, trying alternative method...');
+    console.error('⚠️ Error loading pdf-parse:', error);
+    console.warn('⚠️ PDF parsing failed, trying alternative method...');
     // Fallback to basic text extraction
     return null;
   }
@@ -50,19 +54,25 @@ async function loadPdfParser() {
  */
 async function generateEmbeddings(texts) {
   try {
-    const model = genAI.getGenerativeModel({ model: 'embedding-001' });
+    console.log(`🧠 Generating embeddings for ${texts.length} chunks...`);
     const embeddings = [];
     
-    console.log(`🧠 Generating embeddings for ${texts.length} chunks...`);
-    
     // Process in batches to avoid rate limits
-    const batchSize = 5; // Reduced batch size for stability
+    const batchSize = 5;
     for (let i = 0; i < texts.length; i += batchSize) {
       const batch = texts.slice(i, i + batchSize);
       const batchPromises = batch.map(async (text) => {
         try {
-          const result = await model.embedContent(text);
-          return result.embedding.values;
+          const response = await ai.models.embedContent({
+            model: 'gemini-embedding-001',
+            contents: text
+          });
+          
+          if (!response.embeddings || response.embeddings.length === 0) {
+            throw new Error('No embedding values returned');
+          }
+          
+          return response.embeddings;
         } catch (embeddingError) {
           console.error(`❌ Error generating embedding for chunk ${i}:`, embeddingError.message);
           // Return zero vector as fallback
@@ -137,18 +147,22 @@ async function loadPDF(filePath) {
     const pdfBuffer = await fs.readFile(filePath);
     console.log(`📄 File read successfully, size: ${pdfBuffer.length} bytes`);
     
-    // Try to load PDF parser
+    // Load PDF parser
     const pdfParse = await loadPdfParser();
-    
     if (!pdfParse) {
-      throw new Error('PDF parser not available');
+      throw new Error('PDF parser initialization failed');
     }
     
-    // Parse PDF
+    // Parse PDF with error handling
     console.log('🔍 Parsing PDF content...');
-    const pdfData = await pdfParse(pdfBuffer);
+    let pdfData;
+    try {
+      pdfData = await pdfParse(pdfBuffer);
+    } catch (parseError) {
+      throw new Error(`PDF parsing failed: ${parseError.message}`);
+    }
     
-    if (!pdfData.text || pdfData.text.trim().length === 0) {
+    if (!pdfData || !pdfData.text || pdfData.text.trim().length === 0) {
       throw new Error('No text content found in PDF');
     }
     
@@ -159,6 +173,8 @@ async function loadPDF(filePath) {
         source: filePath,
         totalPages: pdfData.numpages || 1,
         fileName: path.basename(filePath),
+        fileSize: pdfBuffer.length,
+        parseDate: new Date().toISOString()
       }
     }];
     
@@ -166,21 +182,6 @@ async function loadPDF(filePath) {
     return documents;
   } catch (error) {
     console.error('❌ Error loading PDF:', error.message);
-    
-    // If PDF parsing fails, create a dummy document for testing
-    if (error.message.includes('pdf-parse') || error.message.includes('PDF parser')) {
-      console.warn('⚠️ Using fallback: creating dummy content for testing');
-      return [{
-        pageContent: `Dummy content for ${path.basename(filePath)}. This is a fallback when PDF parsing fails. The actual PDF processing will be implemented once the PDF parser is fixed.`,
-        metadata: {
-          source: filePath,
-          totalPages: 1,
-          fileName: path.basename(filePath),
-          note: 'Fallback content - PDF parser needs fixing'
-        }
-      }];
-    }
-    
     throw new Error(`Failed to load PDF: ${error.message}`);
   }
 }
@@ -350,6 +351,7 @@ export function createPYQWorker() {
 
   worker.on('failed', (job, err) => {
     console.log(`❌ Job ${job?.id} failed:`, err.message);
+    console.log(job, `Im inside redis`);
   });
 
   worker.on('progress', (job, progress) => {

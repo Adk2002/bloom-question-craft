@@ -6,6 +6,7 @@ import authRoutes from "./auth/routes/authRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js"
 import pyqRoutes from './routes/pyqRoutes.js'
 import path from 'path';
+import questionGeneration from "./routes/questionGeneration.js"
 
 dotenv.config();
 
@@ -34,7 +35,8 @@ app.use('/api/pyq', pyqRoutes); // All PYQ routes will be under /api/pyq
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-
+//Main generation part
+app.use('api/questions', questionGeneration);
 
 //Adding error handling middleware
 // Add this before routes

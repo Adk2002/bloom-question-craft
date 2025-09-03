@@ -1,20 +1,31 @@
-
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
-import { Send, Download, Settings, MessageSquare, Bot, User, History, Clock } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import {
+  Bot,
+  User,
+  Loader2,
+  AlertCircle,
+  Sparkles
+} from "lucide-react";
 import Navbar from "@/components/Navbar";
+import ChatHistory from "@/components/ChatHistory";
+import SelectContext from "@/components/SelectContext";
+import InputField from "@/components/InputField";
 
 interface ChatMessage {
   id: string;
   type: 'user' | 'bot';
   content: string;
   timestamp: Date;
+  sources?: Array<{
+    fileName: string;
+    subject: string;
+    year: string;
+    score: string;
+  }>;
+  isGenerating?: boolean;
 }
 
 interface ChatSession {
@@ -24,45 +35,69 @@ interface ChatSession {
   timestamp: Date;
 }
 
+interface ContextFile {
+  fileName: string;
+  subject: string;
+  year: string;
+}
+
 const Chat = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
       type: 'bot',
-      content: 'Hello! I\'m here to help you generate questions based on Bloom\'s Taxonomy. Please set your preferences and tell me what subject or topic you\'d like questions for.',
+      content: 'Hello! I\'m here to help you generate questions based on Bloom\'s Taxonomy using your uploaded previous year papers. Please set your preferences and tell me what kind of questions you need.',
       timestamp: new Date()
     }
   ]);
+
   const [inputMessage, setInputMessage] = useState('');
   const [marksDistribution, setMarksDistribution] = useState('');
   const [questionPattern, setQuestionPattern] = useState('');
   const [totalMarks, setTotalMarks] = useState('');
   const [subject, setSubject] = useState('');
-  
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [lastGeneratedContent, setLastGeneratedContent] = useState('');
+  const [availableContexts, setAvailableContexts] = useState<ContextFile[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedContexts, setSelectedContexts] = useState<string[]>([]);
+
   // Mock chat history data
   const [chatSessions] = useState<ChatSession[]>([
     {
       id: '1',
       title: 'Biology Questions - Photosynthesis',
       lastMessage: 'Generated 15 questions on plant biology',
-      timestamp: new Date(Date.now() - 86400000) // 1 day ago
+      timestamp: new Date(Date.now() - 86400000)
     },
     {
       id: '2',
       title: 'Mathematics - Algebra',
       lastMessage: 'Created polynomial equations worksheet',
-      timestamp: new Date(Date.now() - 172800000) // 2 days ago
+      timestamp: new Date(Date.now() - 172800000)
     },
     {
       id: '3',
       title: 'Chemistry - Periodic Table',
       lastMessage: 'Generated MCQs on chemical elements',
-      timestamp: new Date(Date.now() - 259200000) // 3 days ago
+      timestamp: new Date(Date.now() - 259200000)
     }
   ]);
 
-  const handleSendMessage = () => {
-    if (!inputMessage.trim()) return;
+  // Simulate context fetching for demo
+  useEffect(() => {
+    setAvailableContexts([
+      { fileName: "Mathematics_2023.pdf", subject: "Mathematics", year: "2023" },
+      { fileName: "Physics_2022.pdf", subject: "Physics", year: "2022" },
+      { fileName: "Chemistry_2023.pdf", subject: "Chemistry", year: "2023" },
+      { fileName: "Biology_2023.pdf", subject: "Biology", year: "2023" }
+    ]);
+  }, []);
+
+  const handleSendMessage = async () => {
+    if (!inputMessage.trim() || isGenerating) return;
+
+    setError(null);
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
@@ -74,208 +109,248 @@ const Chat = () => {
     setMessages(prev => [...prev, userMessage]);
     setInputMessage('');
 
-    // Simulate bot response
+    // Add loading message
+    const loadingMessage: ChatMessage = {
+      id: (Date.now() + 1).toString(),
+      type: 'bot',
+      content: 'Generating questions using your uploaded papers and Bloom\'s Taxonomy...',
+      timestamp: new Date(),
+      isGenerating: true
+    };
+
+    setMessages(prev => [...prev, loadingMessage]);
+    setIsGenerating(true);
+
+    // Simulate API call with mock response
     setTimeout(() => {
+      setMessages(prev => prev.filter(msg => msg.id !== loadingMessage.id));
+
+      const mockResponse = `**Question Paper: ${subject || 'General'} - ${totalMarks || '100'} Marks**
+
+# Knowledge Level Questions (Bloom's Level 1)
+
+**Q1. [2 marks]** Define photosynthesis and state its importance in the ecosystem.
+
+**Q2. [2 marks]** List the main components of a plant cell.
+
+# Comprehension Level Questions (Bloom's Level 2)
+
+**Q3. [4 marks]** Explain the process of cellular respiration and its relationship with photosynthesis.
+
+**Q4. [4 marks]** Describe the structure and function of chloroplasts.
+
+# Application Level Questions (Bloom's Level 3)
+
+**Q5. [6 marks]** A plant is kept in a dark room for 48 hours. Predict what would happen to the glucose production and explain your reasoning.
+
+# Analysis Level Questions (Bloom's Level 4)
+
+**Q6. [8 marks]** Compare and contrast C3, C4, and CAM photosynthesis pathways. Analyze their advantages in different environmental conditions.
+
+# Synthesis Level Questions (Bloom's Level 5)
+
+**Q7. [10 marks]** Design an experiment to demonstrate the effect of light intensity on the rate of photosynthesis. Include variables, methodology, and expected results.
+
+# Evaluation Level Questions (Bloom's Level 6)
+
+**Q8. [10 marks]** Evaluate the impact of deforestation on global carbon cycle and climate change. Justify your answer with scientific evidence.
+
+---
+**Total: 46 marks**
+*Note: Adjust marks distribution as per your requirements*`;
+
       const botMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
+        id: (Date.now() + 2).toString(),
         type: 'bot',
-        content: 'I\'ve received your request. Based on your preferences, I\'ll generate questions following Bloom\'s Taxonomy levels. This would typically connect to your Express.js backend to generate the actual questions.',
-        timestamp: new Date()
+        content: mockResponse,
+        timestamp: new Date(),
+        sources: [
+          { fileName: "Biology_2023.pdf", subject: "Biology", year: "2023", score: "95%" },
+          { fileName: "Science_2022.pdf", subject: "Science", year: "2022", score: "87%" }
+        ]
       };
+
       setMessages(prev => [...prev, botMessage]);
-    }, 1000);
+      setLastGeneratedContent(mockResponse);
+      setIsGenerating(false);
+    }, 3000);
   };
 
-  const handleDownloadPDF = () => {
-    // This would connect to your Express.js backend to generate and download PDF
-    console.log('Downloading question paper as PDF...');
+  const handleDownloadPDF = async () => {
+    if (!lastGeneratedContent) {
+      alert('Please generate questions first');
+      return;
+    }
+
+    // Mock PDF download
+    alert('PDF download would be implemented with backend integration');
+  };
+
+  const handleContextSelect = (fileName: string) => {
+    setSelectedContexts(prev =>
+      prev.includes(fileName)
+        ? prev.filter(name => name !== fileName)
+        : [...prev, fileName]
+    );
+  };
+
+  const handleSelectSession = (sessionId: string) => {
+    console.log('Selected session:', sessionId);
+    // Here you would load the selected chat session
+  };
+
+  const formatBotMessage = (content: string) => {
+    const lines = content.split('\n');
+    return lines.map((line, index) => {
+      if (line.startsWith('**') && line.endsWith('**')) {
+        return (
+          <div key={index} className="font-bold text-brand-primary mb-2">
+            {line.replace(/\*\*/g, '')}
+          </div>
+        );
+      } else if (line.startsWith('#')) {
+        return (
+          <div key={index} className="font-semibold text-lg mb-2 text-brand-primary">
+            {line.replace(/^#+\s/, '')}
+          </div>
+        );
+      } else if (line.trim().startsWith('-') || line.trim().startsWith('•')) {
+        return (
+          <div key={index} className="ml-4 mb-1">
+            {line}
+          </div>
+        );
+      } else if (line.trim()) {
+        return (
+          <div key={index} className="mb-2">
+            {line}
+          </div>
+        );
+      } else {
+        return <div key={index} className="mb-2"></div>;
+      }
+    });
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-brand-accent via-brand-accent/50 to-brand-accent/30">
       <Navbar />
-      
+
       <div className="max-w-full mx-auto p-4">
-        <div className="grid lg:grid-cols-4 gap-6 h-full">
+        {/* Update grid layout to be more balanced */}
+        <div className="grid lg:grid-cols-5 gap-6 h-[calc(100vh-8rem)]">
           
-          {/* Chat History Panel */}
-          <Card className="lg:col-span-1">
-            <CardHeader>
-              <CardTitle className="flex items-center text-brand-primary">
-                <History className="w-5 h-5 mr-2" />
-                Chat History
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {chatSessions.map((session) => (
-                <div
-                  key={session.id}
-                  className="p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-                >
-                  <h4 className="font-medium text-sm text-gray-900 mb-1 truncate">
-                    {session.title}
-                  </h4>
-                  <p className="text-xs text-gray-600 mb-2 line-clamp-2">
-                    {session.lastMessage}
-                  </p>
-                  <div className="flex items-center text-xs text-gray-500">
-                    <Clock className="w-3 h-3 mr-1" />
-                    {session.timestamp.toLocaleDateString()}
-                  </div>
-                </div>
-              ))}
-              {chatSessions.length === 0 && (
-                <div className="text-center text-gray-500 py-8">
-                  <History className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">No chat history yet</p>
+          {/* Adjust left sidebar width */}
+          <div className="lg:col-span-1 space-y-4 max-h-full overflow-hidden flex flex-col">
+            <ChatHistory
+              chatSessions={chatSessions}
+              onSelectSession={handleSelectSession}
+            />
+            <SelectContext
+              availableContexts={availableContexts}
+              selectedContexts={selectedContexts}
+              onContextSelect={handleContextSelect}
+              onRefresh={() => console.log('Refreshing contexts...')}
+            />
+          </div>
+
+          {/* Adjust main chat area width */}
+          <div className="lg:col-span-4 flex flex-col h-full">
+            <Card className="flex-1 flex flex-col shadow-lg border-0 bg-white/90 backdrop-blur-sm h-full">
+              <CardHeader className="bg-gradient-to-r from-brand-primary to-brand-secondary text-white rounded-t-lg">
+                <CardTitle className="flex items-center text-white text-xl">
+                  <Sparkles className="w-6 h-6 mr-2" />
+                  AI Question Generator
+                </CardTitle>
+              </CardHeader>
+
+              {/* Error Alert */}
+              {error && (
+                <div className="mx-6 mt-4">
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
                 </div>
               )}
-            </CardContent>
-          </Card>
 
-          {/* Chat Section */}
-          <Card className="lg:col-span-3 flex flex-col">
-            <CardHeader>
-              <CardTitle className="flex items-center text-brand-primary">
-                <MessageSquare className="w-5 h-5 mr-2" />
-                Question Generation Chat
-              </CardTitle>
-            </CardHeader>
-            
-            {/* Chat Messages */}
-            <CardContent className="flex-1 flex flex-col">
-              <div className="flex-1 overflow-y-auto space-y-4 mb-4 max-h-80">
-                {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex items-start gap-3 ${
-                      message.type === 'user' ? 'flex-row-reverse' : 'flex-row'
-                    }`}
-                  >
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                      message.type === 'user' 
-                        ? 'bg-brand-primary text-white' 
-                        : 'bg-brand-accent text-brand-primary'
-                    }`}>
-                      {message.type === 'user' ? (
-                        <User className="w-4 h-4" />
-                      ) : (
-                        <Bot className="w-4 h-4" />
-                      )}
-                    </div>
+              {/* Chat Messages */}
+              <CardContent className="flex-1 flex flex-col p-6">
+                <div className="flex-1 overflow-y-auto space-y-6 mb-6">
+                  {messages.map((message) => (
                     <div
-                      className={`max-w-[80%] p-3 rounded-lg ${
-                        message.type === 'user'
-                          ? 'bg-brand-primary text-white ml-auto'
-                          : 'bg-white border border-gray-200'
-                      }`}
+                      key={message.id}
+                      className={`flex items-start gap-4 ${message.type === 'user' ? 'flex-row-reverse' : 'flex-row'
+                        }`}
                     >
-                      <p className="text-sm">{message.content}</p>
-                      <span className={`text-xs mt-1 block ${
-                        message.type === 'user' ? 'text-purple-200' : 'text-gray-500'
-                      }`}>
-                        {message.timestamp.toLocaleTimeString()}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <Separator className="my-4" />
-
-              {/* Question Preferences Section */}
-              <Card className="mb-4">
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center text-brand-primary text-base">
-                    <Settings className="w-4 h-4 mr-2" />
-                    Question Preferences
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="grid md:grid-cols-2 gap-3">
-                    <div>
-                      <Label htmlFor="subject" className="text-sm">Subject</Label>
-                      <Input
-                        id="subject"
-                        placeholder="e.g., Mathematics, Science"
-                        value={subject}
-                        onChange={(e) => setSubject(e.target.value)}
-                        className="h-8"
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="totalMarks" className="text-sm">Total Marks</Label>
-                      <Input
-                        id="totalMarks"
-                        type="number"
-                        placeholder="e.g., 100"
-                        value={totalMarks}
-                        onChange={(e) => setTotalMarks(e.target.value)}
-                        className="h-8"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-3">
-                    <div>
-                      <Label htmlFor="questionPattern" className="text-sm">Question Pattern</Label>
-                      <Select value={questionPattern} onValueChange={setQuestionPattern}>
-                        <SelectTrigger className="h-8">
-                          <SelectValue placeholder="Select pattern" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="subjective">Subjective</SelectItem>
-                          <SelectItem value="objective">Objective</SelectItem>
-                          <SelectItem value="mcq">Multiple Choice</SelectItem>
-                          <SelectItem value="mixed">Mixed Pattern</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Button 
-                        onClick={handleDownloadPDF}
-                        className="w-full bg-brand-secondary hover:bg-blue-600 h-8 mt-5"
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg ${message.type === 'user'
+                          ? 'bg-gradient-to-br from-brand-primary to-brand-secondary text-white'
+                          : 'bg-gradient-to-br from-brand-accent to-brand-accent/70 text-brand-primary border-2 border-brand-primary/20'
+                        }`}>
+                        {message.isGenerating ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : message.type === 'user' ? (
+                          <User className="w-5 h-5" />
+                        ) : (
+                          <Bot className="w-5 h-5" />
+                        )}
+                      </div>
+                      <div
+                        className={`max-w-[80%] p-4 rounded-2xl shadow-md ${message.type === 'user'
+                            ? 'bg-gradient-to-br from-brand-primary to-brand-secondary text-white ml-auto'
+                            : 'bg-white border border-brand-primary/20'
+                          }`}
                       >
-                        <Download className="w-3 h-3 mr-2" />
-                        Download PDF
-                      </Button>
+                        <div className="text-sm">
+                          {message.type === 'bot' && !message.isGenerating ?
+                            formatBotMessage(message.content) :
+                            message.content
+                          }
+                        </div>
+
+                        {/* Sources */}
+                        {message.sources && message.sources.length > 0 && (
+                          <div className="mt-4 pt-3 border-t border-brand-primary/20">
+                            <div className="text-xs text-brand-primary mb-2 font-medium">Sources used:</div>
+                            <div className="flex flex-wrap gap-2">
+                              {message.sources.map((source, index) => (
+                                <Badge key={index} variant="outline" className="text-xs border-brand-primary/30 text-brand-primary">
+                                  {source.fileName} ({source.score})
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        <span className={`text-xs mt-2 block ${message.type === 'user' ? 'text-white/70' : 'text-gray-500'
+                          }`}>
+                          {message.timestamp.toLocaleTimeString()}
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  ))}
+                </div>
 
-                  <div>
-                    <Label htmlFor="marksDistribution" className="text-sm">Marks Distribution</Label>
-                    <Textarea
-                      id="marksDistribution"
-                      placeholder="e.g., 10 questions × 2 marks = 20 marks (Knowledge)&#10;5 questions × 4 marks = 20 marks (Application)..."
-                      value={marksDistribution}
-                      onChange={(e) => setMarksDistribution(e.target.value)}
-                      rows={2}
-                      className="text-sm"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Input Section */}
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Describe the questions you need (e.g., 'Generate 10 questions on photosynthesis covering all Bloom's levels')"
-                  value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                  className="flex-1"
+                {/* Input Field Component */}
+                <InputField
+                  inputMessage={inputMessage}
+                  setInputMessage={setInputMessage}
+                  onSendMessage={handleSendMessage}
+                  isGenerating={isGenerating}
+                  subject={subject}
+                  setSubject={setSubject}
+                  totalMarks={totalMarks}
+                  setTotalMarks={setTotalMarks}
+                  questionPattern={questionPattern}
+                  setQuestionPattern={setQuestionPattern}
+                  marksDistribution={marksDistribution}
+                  setMarksDistribution={setMarksDistribution}
+                  onDownloadPDF={handleDownloadPDF}
+                  hasGeneratedContent={!!lastGeneratedContent}
                 />
-                <Button 
-                  onClick={handleSendMessage}
-                  className="bg-brand-primary hover:bg-purple-700"
-                >
-                  <Send className="w-4 h-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </div>
